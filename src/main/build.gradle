@@ -12,6 +12,7 @@ this.targetCompatibility = '1.8'
 this.sourceCompatibility = '1.8'
 
 shadowJar {
+    classifier = null
 }
 
 repositories {
@@ -27,12 +28,17 @@ dependencies {
 
     kapt "com.squareup.moshi:moshi-kotlin-codegen:$moshi_version"
 
-    compileOnly("lombok:lombok:1.18.26")
+
+    compileOnly "cc.fyre.core:bukkit:1.1-SNAPSHOT"
+    compileOnly "cc.fyre.shard:v1_8:1.1-SNAPSHOT"
     compileOnly "de.minetick:migot:1.8.8-R0.1"
-    compileOnly("org.mongodb.bson:bson:3.8.0")
-    compileOnly("org.mongodb:mongo-java-driver:3.8.2")
+    compileOnly "cc.fyre.modsuite:bukkit:1.0-SNAPSHOT"
 
     compileOnly fileTree(dir: "libs", include: ["*.jar"])
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = '1.8'
 }
 
 sourceSets {
@@ -41,6 +47,10 @@ sourceSets {
 
 this.tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+}
+
+shadowJar {
+    shadowJar.archiveName = this.name + "-" + this.version + ".jar"
 }
 
 publishing {

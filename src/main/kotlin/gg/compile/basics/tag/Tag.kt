@@ -54,4 +54,40 @@ data class Tag(
     fun getUuid(): UUID {
         return this.uuid
     }
+
+    fun getDisplayName(): String {
+        return ChatColor.translateAlternateColorCodes('&', displayName.replace("_", " "))
+    }
+
+    fun getPermission(): String {
+        return this.permission
+    }
+
+    fun getIcon(): ItemStack {
+        return this.icon
+    }
+
+    fun setPrefix(prefix: String) {
+        this.prefix = prefix
+    }
+
+    fun setName(name: String) {
+        this.name = name
+    }
+
+    fun setDisplayName(displayName: String) {
+        this.displayName = displayName
+    }
+
+    fun setPermission(permission: String) {
+        this.permission = permission
+    }
+
+    fun setIcon(icon: ItemStack) {
+        this.icon = icon
+    }
+
+    fun delete() {
+        tagService.deleteTag(this)
+    }
 }

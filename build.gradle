@@ -31,6 +31,7 @@ dependencies {
 
     compileOnly("lombok:lombok:1.18.26")
     compileOnly "de.minetick:migot:1.8.8-R0.1"
+    compileOnly "redis.clients:jedis:$redis_version"
     compileOnly("org.mongodb.bson:bson:3.8.0")
     compileOnly("org.mongodb:mongo-java-driver:3.8.2")
 }

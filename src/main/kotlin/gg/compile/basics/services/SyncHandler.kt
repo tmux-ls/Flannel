@@ -18,4 +18,9 @@ interface SyncHandler {
      * @return the channels
      */
     val channel: String?
+
+
+    fun getChannel(): String? {
+        return channel
+    }
 }
