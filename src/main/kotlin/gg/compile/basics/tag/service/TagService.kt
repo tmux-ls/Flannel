@@ -10,7 +10,7 @@ import java.util.function.Predicate
 import java.util.stream.Stream
 
 class TagService(savingService: SavingService) : Service {
-    private val tags: MutableList<Tag?> = ArrayList<Tag?>()
+    val tags: MutableList<Tag?> = ArrayList<Tag?>()
     private val savingService: SavingService = savingService
 
     override fun load() {

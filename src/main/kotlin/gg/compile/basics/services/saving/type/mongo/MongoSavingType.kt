@@ -1,38 +1,88 @@
 package gg.compile.basics.services.saving.type.mongo
 
 import com.google.gson.JsonObject
-import com.mongodb.Block
 import com.mongodb.MongoClient
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOptions
+import gg.compile.basics.services.json.JsonAppender
 import gg.compile.basics.services.json.JsonUtils
 import gg.compile.basics.services.saving.type.SavingType
 import org.bson.Document
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
-abstract class MongoSavingType(hostname: String, port: Int, database: String) : SavingType {
+class MongoSavingType(hostname: String, port: Int, database: String) : SavingType {
     private val database: MongoDatabase = MongoClient(hostname, port).getDatabase(database)
 
-     fun getJsonObjects(collection: String): List<JsonObject> {
-        val objects: MutableList<JsonObject> = ArrayList()
+    override fun getJsonObjects(collection: String?): List<JsonObject?>? {
+        if (collection == null) return null
+
+        val objects: MutableList<JsonObject?> = mutableListOf()
         database.getCollection(collection).find()
-            .forEach(Block<Document?> { document: Document? -> JsonUtils.getFromDocument(document)
-                ?.let { objects.add(it) } } as Block<in Document?>)
+            .forEach { document ->
+                JsonUtils.getFromDocument(document)?.let { objects.add(it) }
+            }
 
         return objects
     }
 
-     fun getJsonObject(uuid: UUID, collection: String): Optional<JsonObject> {
-        val `object`: JsonObject? = JsonUtils.getFromDocument(
-            database.getCollection(collection).find(Filters.eq<String>("uuid", uuid.toString())).first()
-        )
+    override fun getJsonObject(uuid: UUID?, collection: String?): Optional<JsonObject?> {
+        if (uuid == null || collection == null) return Optional.empty()
 
-        return if (`object` == null) Optional.empty() else Optional.of(`object`)
+        val document = database.getCollection(collection).find(Filters.eq("uuid", uuid.toString())).first()
+        val jsonObject: JsonObject? = JsonUtils.getFromDocument(document)
+
+        return Optional.ofNullable(jsonObject)
     }
 
-     fun saveJsonObject(`object`: JsonObject, collectionName: String): Boolean {
+    override fun saveJsonObject(`object`: JsonObject?, collection: String?): Boolean {
+        if (`object` == null || collection == null || !`object`.has("uuid")) {
+            return false
+        }
+
+        val document: Document = JsonUtils.toDocument(`object`)
+        val uuid = UUID.fromString(document.getString("uuid"))
+
+        return database.getCollection(collection).replaceOne(
+            Filters.eq("uuid", uuid.toString()),
+            document,
+            ReplaceOptions().upsert(true)
+        ).wasAcknowledged()
+    }
+
+    override fun saveJsonObjectAsync(`object`: JsonObject, collection: String?) {
+        if (collection == null) return
+
+        CompletableFuture.runAsync {
+            if (!`object`.has("uuid")) {
+                return@runAsync
+            }
+            val document: Document = JsonUtils.toDocument(`object`)
+            val uuid = UUID.fromString(document.getString("uuid"))
+            database.getCollection(collection).replaceOne(
+                Filters.eq("uuid", uuid.toString()),
+                document,
+                ReplaceOptions().upsert(true)
+            )
+        }.exceptionally { exception ->
+            exception.printStackTrace()
+            null
+        }
+    }
+
+    override fun deleteFromCollection(uuid: UUID?, collection: String?): CompletableFuture<Boolean?>? {
+        if (uuid == null || collection == null) {
+            return CompletableFuture.completedFuture(null)
+        }
+
+        return CompletableFuture.supplyAsync {
+            val result = database.getCollection(collection).deleteOne(Filters.eq("uuid", uuid.toString()))
+            result.wasAcknowledged()
+        }
+    }
+
+    fun saveJsonObject(`object`: JsonObject, collectionName: String): Boolean {
         if (!`object`.has("uuid")) {
             return false
         }
@@ -47,30 +97,15 @@ abstract class MongoSavingType(hostname: String, port: Int, database: String) : 
         ).wasAcknowledged()
     }
 
-     fun saveJsonObjectAsync(`object`: JsonObject, collection: String) {
-        try {
-            CompletableFuture.runAsync {
-                if (!`object`.has("uuid")) {
-                    return@runAsync
-                }
-                val document: Document = JsonUtils.toDocument(`object`)
-                val uuid = UUID.fromString(document.getString("uuid"))
-                database.getCollection(collection).replaceOne(
-                    Filters.eq("uuid", uuid.toString()),
-                    document,
-                    ReplaceOptions().upsert(true)
-                )
-            }
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-        }
-    }
-
-     fun deleteFromCollection(uuid: UUID, collection: String): CompletableFuture<Boolean> {
+    fun deleteFromCollection(uuid: UUID, collection: String): CompletableFuture<Boolean> {
         return CompletableFuture.supplyAsync {
             val result =
                 database.getCollection(collection).deleteOne(Filters.eq("uuid", uuid.toString()))
             result.wasAcknowledged()
         }
+    }
+
+    override fun CoreProfile() {
+        // Implementation details for CoreProfile
     }
 }

@@ -2,6 +2,7 @@ package gg.compile.basics.services.saving.type
 
 import com.google.gson.JsonObject
 import gg.compile.basics.services.Service
+import gg.compile.basics.services.json.JsonAppender
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -16,7 +17,7 @@ interface SavingType : Service {
 
     fun saveJsonObject(`object`: JsonObject?, collection: String?): Boolean
 
-    fun saveJsonObjectAsync(`object`: JsonObject?, collection: String?)
+    fun saveJsonObjectAsync(`object`: JsonAppender, collection: String?)
 
     fun deleteFromCollection(uuid: UUID?, collection: String?): CompletableFuture<Boolean?>?
 }

@@ -9,7 +9,7 @@ class LocalSyncType : SyncType {
 
     private val syncHandler: MutableList<SyncHandler> = mutableListOf()
 
-    override fun publish(channel: String?, `object`: JsonObject?) {
+    override fun publish(channel: String?, `object`: JsonObject) {
         this.incoming(JsonAppender(`object`).append("channel", channel).toString())
     }
 

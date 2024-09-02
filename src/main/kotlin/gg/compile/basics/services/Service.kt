@@ -11,4 +11,6 @@ interface Service {
         serviceHandler.register(this)
         return this as T
     }
+
+    fun CoreProfile()
 }

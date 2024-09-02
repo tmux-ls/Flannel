@@ -80,7 +80,7 @@ abstract class RedisSyncType(hostname: String?, port: Int) : SyncType {
             }
         }
 
-    override fun publish(channel: String?, `object`: JsonObject?) {
+    override fun publish(channel: String?, `object`: JsonObject) {
         this.executeCommand(Consumer<Jedis?> { jedis: Jedis? ->
             jedis?.publish(
                 "core",

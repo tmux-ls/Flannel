@@ -7,23 +7,24 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import java.util.*
 
-abstract class TagSyncHandler : SyncHandler {
-    private val tagService: TagService? = null
+class TagSyncHandler(private val tagService: TagService) : SyncHandler {
 
-    fun incoming(channel: String, `object`: JsonObject) {
-        if (channel == this.channel) {
-            val tagUuid = UUID.fromString(`object`["uuid"].asString)
-            val tagName = `object`["name"].asString
-            val tag = tagService?.findOrMake(tagUuid, tagName) ?: return
+    override fun incoming(channel: String?, `object`: JsonObject?) {
+        if (channel == "tags" && `object` != null) {
+            val tagUuid = UUID.fromString(`object`.get("uuid").asString)
+            val tagName = `object`.get("name").asString
+            val tag = tagService.findOrMake(tagUuid, tagName) ?: return
 
-            tag.setName(`object`["name"].asString)
-            tag.setDisplayName(`object`["displayName"].asString)
-            tag.setPrefix(`object`["prefix"].asString)
-            tag.setPermission(`object`["permission"].asString)
-            tag.setIcon(ItemStack(Material.valueOf(`object`["icon"].asString)))
-
-            // Convert ItemStack to String representation of Material enum
-            `object`.addProperty("icon", tag.getIcon().getType().name)
+            `object`.get("name")?.let { tag.setName(it.asString) }
+            `object`.get("displayName")?.let { tag.setDisplayName(it.asString) }
+            `object`.get("prefix")?.let { tag.setPrefix(it.asString) }
+            `object`.get("permission")?.let { tag.setPermission(it.asString) }
+            `object`.get("icon")?.let {
+                val material = Material.valueOf(it.asString)
+                tag.setIcon(ItemStack(material))
+                // Convert ItemStack to String representation of Material enum
+                `object`.addProperty("icon", material.name)
+            }
         }
     }
 
